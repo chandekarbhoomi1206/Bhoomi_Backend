@@ -1004,8 +1004,7 @@ let cart=[];
 let total=0;
 const PRODUCTION_API_BASE_URL = "https://momeato-api.onrender.com";
 const isGitHubPages = window.location.hostname.endsWith("github.io");
-const savedApiBase = localStorage.getItem("momeato_api_base_url");
-const API_BASE_URL = (savedApiBase || (isGitHubPages ? PRODUCTION_API_BASE_URL : window.location.origin)).replace(/\/$/, "");
+const API_BASE_URL = (isGitHubPages ? PRODUCTION_API_BASE_URL : window.location.origin).replace(/\/$/, "");
 let interiorSlideIndex = 0;
 let interiorCarouselTimer = null;
 
