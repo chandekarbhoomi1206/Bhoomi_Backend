@@ -1002,9 +1002,28 @@ Powered & Designed by <a href="https://github.com/chandekarbhoomi1206" target="_
 <script>
 let cart=[];
 let total=0;
-const API_BASE_URL = window.location.origin;
+const PRODUCTION_API_BASE_URL = "https://momeato-api.onrender.com";
+const isGitHubPages = window.location.hostname.endsWith("github.io");
+const savedApiBase = localStorage.getItem("momeato_api_base_url");
+const API_BASE_URL = (savedApiBase || (isGitHubPages ? PRODUCTION_API_BASE_URL : window.location.origin)).replace(/\/$/, "");
 let interiorSlideIndex = 0;
 let interiorCarouselTimer = null;
+
+function hasConfiguredBackend(){
+  return !API_BASE_URL.includes("your-backend-url.onrender.com");
+}
+
+async function apiFetch(path, options = {}){
+  if(isGitHubPages && !hasConfiguredBackend()){
+    throw new Error("Backend URL not configured. Set PRODUCTION_API_BASE_URL in index.html and admin.html.");
+  }
+
+  try{
+    return await fetch(`${API_BASE_URL}${path}`, options);
+  }catch(error){
+    throw new Error("Cannot connect to server. Please try again in a moment.");
+  }
+}
 
 function addToCart(name,price){
   cart.push({name,price});
@@ -1093,7 +1112,7 @@ function buildOrderPayload(paymentType){
 }
 
 async function submitOrder(paymentType){
-  const response = await fetch(`${API_BASE_URL}/api/orders`, {
+  const response = await apiFetch("/api/orders", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -1453,7 +1472,7 @@ function validateReservation(){
   if(valid){
     const preorderItems = preorder.checked ? getGroupedCartItems() : [];
 
-    fetch(`${API_BASE_URL}/api/reservations`, {
+    apiFetch("/api/reservations", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

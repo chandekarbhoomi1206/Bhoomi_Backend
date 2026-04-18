@@ -276,10 +276,29 @@ button.secondary{
 </div>
 
 <script>
-const API_BASE_URL = window.location.origin;
+const PRODUCTION_API_BASE_URL = "https://momeato-api.onrender.com";
+const isGitHubPages = window.location.hostname.endsWith("github.io");
+const savedApiBase = localStorage.getItem("momeato_api_base_url");
+const API_BASE_URL = (savedApiBase || (isGitHubPages ? PRODUCTION_API_BASE_URL : window.location.origin)).replace(/\/$/, "");
 const ADMIN_PASSWORD_KEY = "momeato_admin_password";
 let allOrders = [];
 let allReservations = [];
+
+function hasConfiguredBackend(){
+  return !API_BASE_URL.includes("your-backend-url.onrender.com");
+}
+
+async function apiFetch(path, options = {}){
+  if(isGitHubPages && !hasConfiguredBackend()){
+    throw new Error("Backend URL not configured. Set PRODUCTION_API_BASE_URL in index.html and admin.html.");
+  }
+
+  try{
+    return await fetch(`${API_BASE_URL}${path}`, options);
+  }catch(error){
+    throw new Error("Cannot connect to server. Please try again in a moment.");
+  }
+}
 
 function getAdminPassword(){
   return sessionStorage.getItem(ADMIN_PASSWORD_KEY) || "";
@@ -462,7 +481,7 @@ function renderReservations(reservations = getFilteredReservations()){
 }
 
 async function loadOrders(){
-  const response = await fetch(`${API_BASE_URL}/api/admin/orders`, {
+  const response = await apiFetch("/api/admin/orders", {
     headers: getAdminHeaders()
   });
 
@@ -477,7 +496,7 @@ async function loadOrders(){
 }
 
 async function loadReservations(){
-  const response = await fetch(`${API_BASE_URL}/api/admin/reservations`, {
+  const response = await apiFetch("/api/admin/reservations", {
     headers: getAdminHeaders()
   });
 
